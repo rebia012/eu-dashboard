@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>EU 市占看板 - 入口</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Microsoft YaHei', sans-serif;
+            background: #f0f4ff;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 50px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.1);
+            text-align: center;
+            max-width: 550px;
+            width: 90%;
+        }
+        h1 { color: #1a1a2e; font-size: 26px; margin-bottom: 8px; }
+        .subtitle { color: #666; margin-bottom: 30px; font-size: 14px; }
+        .url-box {
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 14px 20px;
+            margin: 16px 0;
+            font-size: 14px;
+            word-break: break-all;
+        }
+        .url-box a {
+            color: #1565c0;
+            text-decoration: none;
+            font-weight: 600;
+            font-size: 15px;
+        }
+        .url-box a:hover { text-decoration: underline; }
+        .label { font-size: 12px; color: #888; margin-bottom: 4px; }
+        .btn {
+            display: inline-block;
+            background: #4A90D9;
+            color: white;
+            padding: 12px 32px;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            margin: 8px 5px;
+            transition: background 0.2s;
+        }
+        .btn:hover { background: #357ABD; }
+        .btn.green { background: #2e7d32; }
+        .btn.green:hover { background: #1b5e20; }
+        .btn.gray { background: #78909c; }
+        .btn.gray:hover { background: #546e7a; }
+        .info {
+            color: #888;
+            font-size: 12px;
+            margin-top: 24px;
+            line-height: 1.8;
+            text-align: left;
+            background: #fafafa;
+            padding: 16px;
+            border-radius: 8px;
+        }
+        .update-time { color: #aaa; font-size: 11px; margin-top: 16px; }
+        .copied { color: #2e7d32; font-weight: bold; font-size: 13px; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h1>✈️ EU 飞机市占看板</h1>
+        <p class="subtitle">EU Market Share Dashboard</p>
+
+        <div class="url-box">
+            <div class="label">📍 内网地址（同楼层）</div>
+            <a href="http://10.73.234.67:8501" target="_blank">http://10.73.234.67:8501</a>
+        </div>
+
+        <div class="url-box">
+            <div class="label">🌐 公网地址（跨楼层 / 外地同事）</div>
+            <a id="tunnelLink" href="#" target="_blank">正在获取...</a>
+        </div>
+
+        <div>
+            <a class="btn green" href="http://10.73.234.67:8501" target="_blank">打开看板</a>
+            <button class="btn gray" onclick="copyTunnel()">复制公网链接</button>
+        </div>
+        <div id="copyMsg"></div>
+
+        <p class="update-time" id="updateTime"></p>
+
+        <div class="info">
+            <strong>说明：</strong><br>
+            • 同楼层同事：点击"打开看板"<br>
+            • 跨楼层 / 外地同事：复制"公网地址"发给他们<br>
+            • 公网地址隧道重启后会自动更新，刷新此页即可<br>
+            • 运行看板的电脑必须保持开机
+        </div>
+    </div>
+
+    <script>
+        let tunnelUrl = '';
+
+        function loadTunnelUrl() {
+            fetch('https://raw.githubusercontent.com/rebia012/eu-dashboard/main/_tunnel_url.txt?t=' + Date.now(), { cache: 'no-store' })
+                .then(r => r.ok ? r.text() : '')
+                .then(text => {
+                    const url = text.trim();
+                    const link = document.getElementById('tunnelLink');
+                    if (url && url.startsWith('https://')) {
+                        tunnelUrl = url;
+                        link.href = url;
+                        link.textContent = url;
+                        document.getElementById('updateTime').textContent = '最后更新: ' + new Date().toLocaleString('zh-CN');
+                    } else {
+                        link.textContent = '暂无公网地址（隧道未启动）';
+                        link.href = '#';
+                    }
+                })
+                .catch(() => {
+                    document.getElementById('tunnelLink').textContent = '无法获取';
+                });
+        }
+
+        function copyTunnel() {
+            const msg = document.getElementById('copyMsg');
+            if (tunnelUrl) {
+                navigator.clipboard.writeText(tunnelUrl).then(() => {
+                    msg.innerHTML = '<span class="copied">✅ 已复制</span>';
+                    setTimeout(() => msg.innerHTML = '', 2000);
+                }).catch(() => {
+                    prompt('请手动复制：', tunnelUrl);
+                });
+            } else {
+                msg.innerHTML = '<span style="color:#c62828;font-size:13px;">❌ 公网地址不可用</span>';
+                setTimeout(() => msg.innerHTML = '', 2000);
+            }
+        }
+
+        loadTunnelUrl();
+        setInterval(loadTunnelUrl, 30000);
+    </script>
+</body>
+</html>
